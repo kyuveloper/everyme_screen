@@ -11,7 +11,7 @@ const SignUp = () => {
         <View style={styles.container}>
             <Button
                 title='kakaoSignUp'
-                onPress={() => navigation.navigate('kakaoSignUp')}
+                onPress={() => navigation.navigate('KakaoLogin')}
             />
             <Button
                 title='EmailSignUp'

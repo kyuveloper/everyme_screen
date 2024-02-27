@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MainPage from "./MainPage";
 import Login from "./Login";
 import SignUp from "./SignUp";
-import EmailSignUp from "./emailSignUp";
+import EmailSignUp from "./EmailSignUp";
 
 
 const Stack = createNativeStackNavigator();
@@ -37,6 +37,7 @@ const IndexPage = () => {
                 component={EmailSignUp}
                 options={{ headerShown: false }}
             />
+            
         </Stack.Navigator>
     )
 }

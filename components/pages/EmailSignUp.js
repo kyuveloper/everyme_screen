@@ -2,6 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import { useState } from "react";
 import { Button, StyleSheet, Text, TextInput, View } from "react-native"
+import { removeWhitespace, validateEmail } from "../../util/Validation";
 
 
 const EmailSignUp = () => {
@@ -9,51 +10,35 @@ const EmailSignUp = () => {
     const navigation = useNavigation();
 
     const [email, setEmail] = useState('');
-    const [emailCheck, setEmailCheck] = useState('');
     const [password, setPassword] = useState('');
     const [passwordCheck, setPasswordCheck] = useState('');
 
     const [emailCheckResult, setEmailCheckResult] = useState('');
     const [passCheckResult, setPassCheckResult] = useState('');
-    const [totalCheck, setTotalCheck] = useState(false);
 
-    const emailChangeHandler = (text) => {
-        setEmail(text);
-    }
-    const emailCheckChangeHandler = (text) => {
-        setEmailCheck(text);
-    }
-
-    const passChangeHandler = (text) => {
-        setPassword(text);
-    }
-    const passCheckChangeHandler = (text) => {
-        setPasswordCheck(text);
+    const emailChangeHandler = (email) => {
+        const changedEmail = removeWhitespace(email);
+        setEmail(changedEmail);
+        setEmailCheckResult(
+            changedEmail === ''? '' : validateEmail(changedEmail)? '' : 'Please valid email address'
+        )
     }
 
-    const emailCheckBtnHandler = () => {
-        console.log(email, emailCheck);
-
-        if (email.length === 0 || email !== emailCheck) {
-            setTotalCheck(false)
-            setEmailCheckResult('아이디가 일치하지 않습니다')
-        } else {
-            setTotalCheck(true)
-            setEmailCheckResult('아이디가 일치합니다')
-        }
+    const passChangeHandler = (password) => {
+        const changedPass = removeWhitespace(password);
+        setPassword(changedPass);
+        setPassCheckResult(
+            changedPass === ''? '' : password.length < 4? 'Password must be at least 4 characters long' : ''
+        )
+    }
+    const passCheckChangeHandler = (passwordCheck) => {
+        const changedPassCheck = removeWhitespace(passwordCheck);
+        setPasswordCheck(changedPassCheck);
+        setPassCheckResult(
+            changedPassCheck === ''? '' : password !== passwordCheck? 'Password must match' : ''
+        )
     }
 
-    const passCheckBtnHandler = () => {
-        console.log(password, passwordCheck);
-
-        if (password.length === 0 || password !== passwordCheck) {
-            setTotalCheck(false)
-            setPassCheckResult('비밀번호가 일치하지 않습니다')
-        } else {
-            setTotalCheck(true)
-            setPassCheckResult('비밀번호가 일치합니다')
-        }
-    }
 
     const submitBtnHandler = () => {
 
@@ -64,28 +49,23 @@ const EmailSignUp = () => {
             'userPass': password
         })
 
-        if (totalCheck) {
-            axios({
-                method: 'POST',
-                url: 'http://192.168.0.12:8080/signup',
-                data: signupData,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => {
-                console.log(response.data);
-                if (response.status === 200) {
-                    navigation.navigate('MainPage');
-                } else {
-                    alert('아이디와 비밀번호를 확인해주세요');
-                }
-            }).catch(error => {
-                console.log(error);
-            })
-        } else {
-            alert('아이디와 비밀번호를 확인해주세요');
-        }
-
+        axios({
+            method: 'POST',
+            url: 'http://192.168.0.12:8080/signup',
+            data: signupData,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            console.log(response.data);
+            if (response.status === 200) {
+                navigation.navigate('MainPage');
+            } else {
+                alert('아이디와 비밀번호를 확인해주세요');
+            }
+        }).catch(error => {
+            alert('아이디가 이미 존재합니다')
+        })
         
     }
 
@@ -94,23 +74,16 @@ const EmailSignUp = () => {
         <View style={styles.container}>
             <Text>emailSignUp</Text>
             <TextInput onChangeText={emailChangeHandler} blurOnSubmit={true} placeholder="아이디 입력" keyboardType="default" value={email} style={styles.textBox}/>
-            <TextInput onChangeText={emailCheckChangeHandler} blurOnSubmit={true} placeholder="아이디 확인" keyboardType="default" value={emailCheck} style={styles.textBox}/>
-            <Text>{emailCheckResult}</Text>
-            <Button
-                title='Check'
-                onPress={emailCheckBtnHandler}
-            />
             
             <TextInput onChangeText={passChangeHandler} blurOnSubmit={true} placeholder="비밀번호 입력" keyboardType="default" value={password} style={styles.textBox}/>
             <TextInput onChangeText={passCheckChangeHandler} blurOnSubmit={true} placeholder="비밀번호 확인" keyboardType="default" value={passwordCheck} style={styles.textBox}/>
-            <Text>{passCheckResult}</Text>
-            <Button
-                title='Check'
-                onPress={passCheckBtnHandler}
-            />
+            <Text style={(emailCheckResult.length === 0 ? styles.errorMsg : styles.showErrorMsg)}>{emailCheckResult}</Text>
+            <Text style={(passCheckResult.length === 0 ? styles.errorMsg : styles.showErrorMsg)}>{passCheckResult}</Text>
+            
             <Button
                 title='Submit'
                 onPress={submitBtnHandler}
+                disabled={(email.length === 0 || password.length === 0 || passwordCheck.length === 0) ? true : !(emailCheckResult.length === 0 && passCheckResult.length === 0) ? true : false}
             />
         </View>
     )
@@ -133,5 +106,12 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         padding: 10,
         margin: 10,
+    },
+    errorMsg: {
+        color:'red',
+        display: 'none'
+    },
+    showErrorMsg: {
+        color:'red'
     }
-});
+})
